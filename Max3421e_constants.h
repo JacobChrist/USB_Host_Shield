@@ -12,7 +12,7 @@
   #define MOSI_PIN  51
   #define SS_PIN    53
 #endif
-#if  defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+#if  defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__PIC32MX__)
   #define SCK_PIN   13
   #define MISO_PIN  12
   #define MOSI_PIN  11
@@ -33,8 +33,11 @@
 
 /* */
 
+#if  defined(__PIC32MX__)
+#else
 #define ON  true
 #define OFF false
+#endif
 
 /* VBUS states */
 #define SE0     0
@@ -231,6 +234,5 @@
 
 #define MODE_FS_HOST    (bmDPPULLDN|bmDMPULLDN|bmHOST|bmSOFKAENAB)
 #define MODE_LS_HOST    (bmDPPULLDN|bmDMPULLDN|bmHOST|bmLOWSPEED|bmSOFKAENAB)
-
 
 #endif //_MAX3421Econstants_h_

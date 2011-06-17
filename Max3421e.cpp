@@ -2,7 +2,7 @@
 /* MAX3421E USB host controller support */
 
 #include "Max3421e.h"
-// #include "Max3421e_constants.h"
+#include "Max3421e_constants.h"
 
 static byte vbusState;
 
@@ -11,7 +11,10 @@ static byte vbusState;
 /* Constructor */
 MAX3421E::MAX3421E()
 {
-    spi_init();  
+#if defined(__PIC32MX__)
+    spi_init();
+#else
+#endif
     pinMode( MAX_INT, INPUT);
     pinMode( MAX_GPX, INPUT );
     pinMode( MAX_SS, OUTPUT );
@@ -51,18 +54,38 @@ byte MAX3421E::getVbusState( void )
 /* Single host register write   */
 void MAX3421E::regWr( byte reg, byte val)
 {
+#if defined(__PIC32MX__)
+    digitalWrite(MAX_SS,LOW);
+    SPI2BUF = ( reg | 0x02 );
+    while(( SPI2STAT & 0x00000800 )); // Wait while data is shifted out
+    SPI2BUF = val;
+    while(( SPI2STAT & 0x00000800 )); // Wait while data is shifted out
+    digitalWrite(MAX_SS,HIGH);
+#else
       digitalWrite(MAX_SS,LOW);
       SPDR = ( reg | 0x02 );
       while(!( SPSR & ( 1 << SPIF )));
       SPDR = val;
       while(!( SPSR & ( 1 << SPIF )));
       digitalWrite(MAX_SS,HIGH);
+#endif
       return;
 }
 /* multiple-byte write */
 /* returns a pointer to a memory position after last written */
 char * MAX3421E::bytesWr( byte reg, byte nbytes, char * data )
 {
+#if defined(__PIC32MX__)
+    digitalWrite(MAX_SS,LOW);
+    SPI2BUF = ( reg | 0x02 );
+    while( nbytes-- ) {
+      while(( SPI2STAT & 0x00000800 )); //check if previous byte was sent
+      SPI2BUF = ( *data );               // send next data byte
+      data++;                         // advance data pointer
+    }
+    while(( SPI2STAT & 0x00000800 )); // Wait while data is shifted out
+    digitalWrite(MAX_SS,HIGH);
+#else
     digitalWrite(MAX_SS,LOW);
     SPDR = ( reg | 0x02 );
     while( nbytes-- ) {
@@ -72,6 +95,7 @@ char * MAX3421E::bytesWr( byte reg, byte nbytes, char * data )
     }
     while(!( SPSR & ( 1 << SPIF )));
     digitalWrite(MAX_SS,HIGH);
+#endif
     return( data );
 }
 /* GPIO write. GPIO byte is split between 2 registers, so two writes are needed to write one byte */
@@ -89,6 +113,9 @@ void MAX3421E::gpioWr( byte val )
 byte MAX3421E::regRd( byte reg )    
 {
   byte tmp;
+#if defined(__PIC32MX__)
+  return( tmp );
+#else
     digitalWrite(MAX_SS,LOW);
     SPDR = reg;
     while(!( SPSR & ( 1 << SPIF )));
@@ -96,11 +123,14 @@ byte MAX3421E::regRd( byte reg )
     while(!( SPSR & ( 1 << SPIF )));
     digitalWrite(MAX_SS,HIGH); 
     return( SPDR );
+#endif
 }
 /* multiple-bytes register read                             */
 /* returns a pointer to a memory position after last read   */
 char * MAX3421E::bytesRd ( byte reg, byte nbytes, char  * data )
 {
+#if defined(__PIC32MX__)
+#else
     digitalWrite(MAX_SS,LOW);
     SPDR = reg;      
     while(!( SPSR & ( 1 << SPIF )));    //wait
@@ -112,7 +142,8 @@ char * MAX3421E::bytesRd ( byte reg, byte nbytes, char  * data )
       data++;
     }
     digitalWrite(MAX_SS,HIGH);
-    return( data );   
+#endif
+    return( data );
 }
 /* GPIO read. See gpioWr for explanation */
 /* GPIN pins are in high nibbles of IOPINS1, IOPINS2    */

@@ -1,13 +1,14 @@
 /* Copyright 2009-2011 Oleg Mazurov, Circuits At Home, http://www.circuitsathome.com */
 //this code is heavily borrowed from official Arduino source v.0017
 // link to original http://code.google.com/p/arduino/source/browse/trunk/hardware/libraries/LiquidCrystal/LiquidCrystal.cpp
+#ifdef GONE
 #include "Max_LCD.h"
 #include "Max3421e.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
-#include "WProgram.h"
+//#include "WProgram.h"
 
 // When the display powers up, it is configured as follows:
 //
@@ -248,3 +249,4 @@ void Max_LCD::sendbyte( uint8_t val )
     SENDlcdPins();
     delayMicroseconds(100);
 }
+#endif

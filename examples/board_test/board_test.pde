@@ -16,6 +16,25 @@ void loop();
 MAX3421E Max;
 USB Usb;
 
+#if defined(__PIC32MX__)
+    #define printProgStr(s)     Serial.print(s);
+#else
+    /* given a PROGMEM string, use Serial.print() to send it out */
+    /* Some non-intuitive casting necessary:                           */
+    /* printProgStr(PSTR("Func.Mode:\t0x"));                           */
+    /* printProgStr((char*)pgm_read_word(&mtpopNames[(op & 0xFF)]));   */
+    void printProgStr(const char* str )
+    {
+      if(!str) {
+        return;
+      }
+      char c;
+      while((c = pgm_read_byte(str++))) {
+        Serial.print(c,BYTE);
+      }
+    }
+#endif
+
 void setup()
 {
   Serial.begin( 115200 );
@@ -252,20 +271,6 @@ void test_halted()
     Max.regWr( 0x55, 0x55 );
 //    Spi.transfer( 0x55 ); 
     digitalWrite(MAX_SS,HIGH);
-  }
-}
-/* given a PROGMEM string, use Serial.print() to send it out */
-/* Some non-intuitive casting necessary:                           */
-/* printProgStr(PSTR("Func.Mode:\t0x"));                           */
-/* printProgStr((char*)pgm_read_word(&mtpopNames[(op & 0xFF)]));   */
-void printProgStr(const char* str )
-{
-  if(!str) { 
-    return;
-  }
-  char c;
-  while((c = pgm_read_byte(str++))) {
-    Serial.print(c,BYTE);
   }
 }
 /* prints hex numbers with leading zeroes */

@@ -5,6 +5,8 @@
 //this code is heavily borrowed from official Arduino source v.0017
 // link to original http://code.google.com/p/arduino/source/browse/trunk/hardware/libraries/LiquidCrystal/LiquidCrystal.h
 //
+#ifdef GONE
+
 #ifndef _Max_LCD_h_
 #define _Max_LCD_h_
 
@@ -84,4 +86,5 @@ private:
 
 
 
+#endif
 #endif

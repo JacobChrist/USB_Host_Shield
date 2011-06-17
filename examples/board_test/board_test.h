@@ -4,7 +4,13 @@
 
 /* PGMSPACE */
 #include <inttypes.h>
+#if defined(__PIC32MX__)
+    // neither PROGMEM or PSTR are needed for PIC32, just define them as null
+    #define PROGMEM
+    #define PSTR(s) (s)
+#else
 #include <avr/pgmspace.h>
+#endif
 
 /* Messages */
 const char startBanner  [] PROGMEM = "\r\nCircuits At Home 2010"
