@@ -4,6 +4,27 @@
 #define _MAX3421E_H_
 
 #if defined(__PIC32MX__)
+/*  Hardware Connections Needed to Connect chipKIT Uno32 to USB Host Shield
+    Signal  Uno32   USB Shld
+    ======= ======= =======
+    +5V     5.0V    VBUS
+    +3.3V   3.3V    3.3V
+    GND     GND     GND
+    SCLK    SCLK2   SCLK
+    MOSI    SDO2    MOSI
+    MISO    SDI2    MISO
+    CS              SS
+    INT             INT
+    GPX             GPX
+    RESET           RESET
+
+  #define SCK_PIN   13
+  #define MISO_PIN  12
+  #define MOSI_PIN  11
+  #define SS_PIN    10
+
+*/
+
     #include <plib.h>
     #include <WProgram.h>
     //#include <SPI.h>
