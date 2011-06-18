@@ -6,22 +6,33 @@
 
 static byte vbusState;
 
-/* Functions    */
 
 /* Constructor */
 MAX3421E::MAX3421E()
 {
-#if defined(__PIC32MX__)
-    spi_init();
-#else
-#endif
+    Serial.println("MAX3421E()");
     pinMode( MAX_INT, INPUT);
     pinMode( MAX_GPX, INPUT );
     pinMode( MAX_SS, OUTPUT );
     digitalWrite(MAX_SS,HIGH);   
     pinMode( MAX_RESET, OUTPUT );
     digitalWrite( MAX_RESET, HIGH );  //release MAX3421E from reset
+#if defined(__PIC32MX__)
+    spi_init();
+#else
+#endif
 }
+
+/* Functions    */
+byte MAX3421E::spi_swap(byte _data) {
+    while( ((1 << bnTbe) & SPI2STAT) == 0 );
+    SPI2BUF = _data;
+    while( ((1 << bnRbf) & SPI2STAT) == 0 );
+    return SPI2BUF;
+}
+#if defined(__PIC32MX__)
+#else
+#endif
 
 byte MAX3421E::getVbusState( void )
 { 
@@ -54,13 +65,33 @@ byte MAX3421E::getVbusState( void )
 /* Single host register write   */
 void MAX3421E::regWr( byte reg, byte val)
 {
+    byte tmp;
+/*
+    Serial.print("regWr(");
+    Serial.print(reg, HEX);
+    Serial.print(")=");
+    Serial.print(val, HEX);
+    Serial.print("");
+*/
 #if defined(__PIC32MX__)
+    //for( int i = 0; i < 30000; i++) {
     digitalWrite(MAX_SS,LOW);
-    SPI2BUF = ( reg | 0x02 );
-    while(( SPI2STAT & 0x00000800 )); // Wait while data is shifted out
-    SPI2BUF = val;
-    while(( SPI2STAT & 0x00000800 )); // Wait while data is shifted out
+
+    tmp = (reg|0x02);
+    //while( ((1 << bnTbe) & SPI2STAT) == 0 ); // Loop while transmit buffer is not empty
+    //SPI2BUF = tmp;
+    //while( ((1 << bnRbf) & SPI2STAT) == 0 ); // Loop while recieve buffer is not empty
+    //tmp = SPI2BUF;
+    tmp = spi_swap(tmp);
+
+//    while( ((1 << bnTbe) & SPI2STAT) == 0 );
+//    SPI2BUF = val;
+//    while( ((1 << bnRbf) & SPI2STAT) == 0 );
+//    tmp = SPI2BUF;
+    tmp = spi_swap(val);
+
     digitalWrite(MAX_SS,HIGH);
+    //}
 #else
       digitalWrite(MAX_SS,LOW);
       SPDR = ( reg | 0x02 );
@@ -69,21 +100,29 @@ void MAX3421E::regWr( byte reg, byte val)
       while(!( SPSR & ( 1 << SPIF )));
       digitalWrite(MAX_SS,HIGH);
 #endif
+     // Serial.println("*");
       return;
 }
 /* multiple-byte write */
 /* returns a pointer to a memory position after last written */
 char * MAX3421E::bytesWr( byte reg, byte nbytes, char * data )
 {
+    byte tmp;
+    Serial.println("bytesWr");
 #if defined(__PIC32MX__)
     digitalWrite(MAX_SS,LOW);
+    while( ((1 << bnTbe) & SPI2STAT) == 0 );
     SPI2BUF = ( reg | 0x02 );
+    while( ((1 << bnRbf) & SPI2STAT) == 0 );
+    tmp = SPI2BUF;
+
     while( nbytes-- ) {
-      while(( SPI2STAT & 0x00000800 )); //check if previous byte was sent
+      while( ((1 << bnTbe) & SPI2STAT) == 0 );
       SPI2BUF = ( *data );               // send next data byte
+      while( ((1 << bnRbf) & SPI2STAT) == 0 );
+      tmp = SPI2BUF;
       data++;                         // advance data pointer
     }
-    while(( SPI2STAT & 0x00000800 )); // Wait while data is shifted out
     digitalWrite(MAX_SS,HIGH);
 #else
     digitalWrite(MAX_SS,LOW);
@@ -112,8 +151,30 @@ void MAX3421E::gpioWr( byte val )
 /* Single host register read        */
 byte MAX3421E::regRd( byte reg )    
 {
-  byte tmp;
+    byte tmp;
+    byte status;
 #if defined(__PIC32MX__)
+  digitalWrite(MAX_SS,LOW);
+  while( ((1 << bnTbe) & SPI2STAT) == 0 );
+  SPI2BUF = reg;
+  while( ((1 << bnRbf) & SPI2STAT) == 0 );
+  status = SPI2BUF;
+  //SPItransfer(reg);
+  while( ((1 << bnTbe) & SPI2STAT) == 0 );
+  SPI2BUF = 0;
+  while( ((1 << bnRbf) & SPI2STAT) == 0 );
+  tmp = (byte)SPI2BUF;
+  //tmp = SPItransfer(0);
+  digitalWrite(MAX_SS,HIGH);
+/*
+  Serial.print("regRd(");
+  Serial.print(reg>>3,DEC);
+  Serial.print(")=0x");
+  Serial.print(status,HEX);
+  Serial.print(",0x");
+  Serial.print(tmp,HEX);
+  Serial.println("");
+*/
   return( tmp );
 #else
     digitalWrite(MAX_SS,LOW);
@@ -129,7 +190,31 @@ byte MAX3421E::regRd( byte reg )
 /* returns a pointer to a memory position after last read   */
 char * MAX3421E::bytesRd ( byte reg, byte nbytes, char  * data )
 {
+    byte tmp;
 #if defined(__PIC32MX__)
+    Serial.print("regRd(");
+    Serial.print(reg,HEX);
+    Serial.print(")=");
+
+    digitalWrite(MAX_SS,LOW);
+    while( ((1 << bnTbe) & SPI2STAT) == 0 );
+    SPI2BUF = reg;
+    while( ((1 << bnRbf) & SPI2STAT) == 0 );
+    tmp = SPI2BUF;
+    //SPItransfer(reg);
+    while( nbytes ) {
+      while( ((1 << bnTbe) & SPI2STAT) == 0 );
+      SPI2BUF = 0;
+      while( ((1 << bnRbf) & SPI2STAT) == 0 );
+      *data = (char)SPI2BUF;
+      //*data = SPItransfer(0);
+      nbytes--;
+      Serial.print(*data,HEX);
+      Serial.print(",");
+      data++;
+    }
+    digitalWrite(MAX_SS,HIGH);
+    Serial.println("");
 #else
     digitalWrite(MAX_SS,LOW);
     SPDR = reg;      
@@ -159,14 +244,21 @@ byte MAX3421E::gpioRd( void )
 boolean MAX3421E::reset()
 {
   byte tmp = 0;
+  byte result = 0xff;
+    // Note, reset does not take SPI out of full duplex (page 6 of the programing guide)
     regWr( rUSBCTL, bmCHIPRES );                        //Chip reset. This stops the oscillator
     regWr( rUSBCTL, 0x00 );                             //Remove the reset
-    while(!(regRd( rUSBIRQ ) & bmOSCOKIRQ )) {          //wait until the PLL is stable
-        tmp++;                                          //timeout after 256 attempts
-        if( tmp == 0 ) {
+    do {
+        delay(100);
+        result = regRd( rUSBIRQ );
+        Serial.print("rUSBIRQ=0x");
+        Serial.println(result,HEX);
+
+        tmp++;                                          //timeout after 64k attempts
+        if( tmp == 0x00 ) {
             return( false );
         }
-    }
+    } while(!(result & bmOSCOKIRQ ));          //wait until the PLL is stable
     return( true );
 }
 /* turn USB power on/off                                                */
@@ -229,21 +321,46 @@ void MAX3421E::busprobe( void )
             break;
         }//end switch( bus_sample )
 }
+void MAX3421E::reg_dump(void){
+    byte reg;
+    for( reg = 0; reg <=31; reg++ ) {
+        Serial.print("reg(");
+        Serial.print(reg, DEC);
+        Serial.print(") = 0x");
+        Serial.println(regRd( reg ), HEX);
+    }
+    delay(10000);
+}
+
 /* MAX3421E initialization after power-on   */
 void MAX3421E::powerOn()
 {
+    byte result;
     /* Configure full-duplex SPI, interrupt pulse   */
-    regWr( rPINCTL,( bmFDUPSPI + bmINTLEVEL + bmGPXB ));    //Full-duplex SPI, level interrupt, GPX
+    Serial.println("");
+    Serial.println("Starting power on sequence...");
+    regWr( rPINCTL,( bmFDUPSPI | bmINTLEVEL | bmGPXB ));    //Full-duplex SPI, level interrupt, GPX
+    Serial.print("rPINCTL = 0x");
+    Serial.println( regRd( rPINCTL ), HEX);
     if( reset() == false ) {                                //stop/start the oscillator
         Serial.println("Error: OSCOKIRQ failed to assert");
+    }
+    else {
+        Serial.println("Status: OSCOKIRQ asserted");
     }
 
     /* configure host operation */
     regWr( rMODE, bmDPPULLDN|bmDMPULLDN|bmHOST|bmSEPIRQ );      // set pull-downs, Host, Separate GPIN IRQ on GPX
     regWr( rHIEN, bmCONDETIE|bmFRAMEIE );                                             //connection detection
     /* check if device is connected */
+
     regWr( rHCTL,bmSAMPLEBUS );                                             // sample USB bus
-    while(!(regRd( rHCTL ) & bmSAMPLEBUS ));                                //wait for sample operation to finish
+    do {
+        //delay(250);
+        result = regRd( rHCTL );
+        Serial.print("rHCTL=0x");
+        Serial.println(result,HEX);
+    } while(!(result  & bmSAMPLEBUS ));                                //wait for sample operation to finish
     busprobe();                                                             //check if anything is connected
     regWr( rHIRQ, bmCONDETIRQ );                                            //clear connection detect interrupt                 
     regWr( rCPUCTL, 0x01 );                                                 //enable interrupt pin

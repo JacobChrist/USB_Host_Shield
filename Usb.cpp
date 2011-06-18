@@ -12,6 +12,7 @@ EP_RECORD dev0ep;           //Endpoint data structure used during enumeration fo
 /* constructor */
 
 USB::USB () {
+    Serial.println("USB()");
     usb_task_state = USB_DETACHED_SUBSTATE_INITIALIZE;  //set up state machine
     init(); 
 }
