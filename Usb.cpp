@@ -56,7 +56,7 @@ void USB::setDevTableEntry( byte addr, EP_RECORD* eprecord_ptr )
 /* return codes:                */
 /* 00       =   success         */
 /* 01-0f    =   non-zero HRSLT  */
-byte USB::ctrlReq( byte addr, byte ep, byte bmReqType, byte bRequest, byte wValLo, byte wValHi, unsigned int wInd, unsigned int nbytes, char* dataptr, unsigned int nak_limit )
+byte USB::ctrlReq( byte addr, byte ep, byte bmReqType, byte bRequest, byte wValLo, byte wValHi, us16 wInd, us16 nbytes, char* dataptr, us16 nak_limit )
 {
  boolean direction = false;     //request direction, IN or OUT
  byte rcode;   
@@ -95,7 +95,7 @@ byte USB::ctrlReq( byte addr, byte ep, byte bmReqType, byte bRequest, byte wValL
 }
 /* Control transfer with status stage and no data stage */
 /* Assumed peripheral address is already set */
-byte USB::ctrlStatus( byte ep, boolean direction, unsigned int nak_limit )
+byte USB::ctrlStatus( byte ep, boolean direction, us16 nak_limit )
 {
   byte rcode;
     if( direction ) { //GET
@@ -107,7 +107,7 @@ byte USB::ctrlStatus( byte ep, boolean direction, unsigned int nak_limit )
     return( rcode );
 }
 /* Control transfer with data stage. Stages 2 and 3 of control transfer. Assumes preipheral address is set and setup packet has been sent */
-byte USB::ctrlData( byte addr, byte ep, unsigned int nbytes, char* dataptr, boolean direction, unsigned int nak_limit )
+byte USB::ctrlData( byte addr, byte ep, us16 nbytes, char* dataptr, boolean direction, us16 nak_limit )
 {
  byte rcode;
   if( direction ) {                      //IN transfer
@@ -125,12 +125,12 @@ byte USB::ctrlData( byte addr, byte ep, unsigned int nbytes, char* dataptr, bool
 /* Keep sending INs and writes data to memory area pointed by 'data'                                                           */
 /* rcode 0 if no errors. rcode 01-0f is relayed from dispatchPkt(). Rcode f0 means RCVDAVIRQ error,
             fe USB xfer timeout */
-byte USB::inTransfer( byte addr, byte ep, unsigned int nbytes, char* data, unsigned int nak_limit )
+byte USB::inTransfer( byte addr, byte ep, us16 nbytes, char* data, us16 nak_limit )
 {
  byte rcode;
  byte pktsize;
  byte maxpktsize = devtable[ addr ].epinfo[ ep ].MaxPktSize; 
- unsigned int xfrlen = 0;
+ us16 xfrlen = 0;
     regWr( rHCTL, devtable[ addr ].epinfo[ ep ].rcvToggle );    //set toggle value
     while( 1 ) { // use a 'return' to exit this loop
         rcode = dispatchPkt( tokIN, ep, nak_limit );           //IN packet to EP-'endpoint'. Function takes care of NAKS.
@@ -164,12 +164,12 @@ byte USB::inTransfer( byte addr, byte ep, unsigned int nbytes, char* data, unsig
 /* Handles NAK bug per Maxim Application Note 4000 for single buffer transfer   */
 /* rcode 0 if no errors. rcode 01-0f is relayed from HRSL                       */
 /* major part of this function borrowed from code shared by Richard Ibbotson    */
-byte USB::outTransfer( byte addr, byte ep, unsigned int nbytes, char* data, unsigned int nak_limit )
+byte USB::outTransfer( byte addr, byte ep, us16 nbytes, char* data, us16 nak_limit )
 {
  byte rcode, retry_count;
  char* data_p = data;   //local copy of the data pointer
- unsigned int bytes_tosend, nak_count;
- unsigned int bytes_left = nbytes;
+ us16 bytes_tosend, nak_count;
+ us16 bytes_left = nbytes;
  byte maxpktsize = devtable[ addr ].epinfo[ ep ].MaxPktSize; 
  unsigned long timeout = millis() + USB_XFER_TIMEOUT;
  
@@ -225,12 +225,12 @@ byte USB::outTransfer( byte addr, byte ep, unsigned int nbytes, char* data, unsi
 /* If nak_limit == 0, do not count NAKs, exit after timeout                                         */
 /* If bus timeout, re-sends up to USB_RETRY_LIMIT times                                             */
 /* return codes 0x00-0x0f are HRSLT( 0x00 being success ), 0xff means timeout                       */
-byte USB::dispatchPkt( byte token, byte ep, unsigned int nak_limit )
+byte USB::dispatchPkt( byte token, byte ep, us16 nak_limit )
 {
  unsigned long timeout = millis() + USB_XFER_TIMEOUT;
  byte tmpdata;   
  byte rcode;
- unsigned int nak_count = 0;
+ us16 nak_count = 0;
  char retry_count = 0;
 
   while( timeout > millis() ) {

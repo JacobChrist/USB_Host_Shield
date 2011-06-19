@@ -74,24 +74,10 @@ void MAX3421E::regWr( byte reg, byte val)
     Serial.print("");
 */
 #if defined(__PIC32MX__)
-    //for( int i = 0; i < 30000; i++) {
-    digitalWrite(MAX_SS,LOW);
-
-    tmp = (reg|0x02);
-    //while( ((1 << bnTbe) & SPI2STAT) == 0 ); // Loop while transmit buffer is not empty
-    //SPI2BUF = tmp;
-    //while( ((1 << bnRbf) & SPI2STAT) == 0 ); // Loop while recieve buffer is not empty
-    //tmp = SPI2BUF;
-    tmp = spi_swap(tmp);
-
-//    while( ((1 << bnTbe) & SPI2STAT) == 0 );
-//    SPI2BUF = val;
-//    while( ((1 << bnRbf) & SPI2STAT) == 0 );
-//    tmp = SPI2BUF;
-    tmp = spi_swap(val);
-
-    digitalWrite(MAX_SS,HIGH);
-    //}
+    digitalWrite( MAX_SS,LOW );
+    tmp = spi_swap( reg | 0x02 );
+    tmp = spi_swap( val );
+    digitalWrite( MAX_SS,HIGH );
 #else
       digitalWrite(MAX_SS,LOW);
       SPDR = ( reg | 0x02 );
@@ -108,22 +94,14 @@ void MAX3421E::regWr( byte reg, byte val)
 char * MAX3421E::bytesWr( byte reg, byte nbytes, char * data )
 {
     byte tmp;
-    Serial.println("bytesWr");
 #if defined(__PIC32MX__)
-    digitalWrite(MAX_SS,LOW);
-    while( ((1 << bnTbe) & SPI2STAT) == 0 );
-    SPI2BUF = ( reg | 0x02 );
-    while( ((1 << bnRbf) & SPI2STAT) == 0 );
-    tmp = SPI2BUF;
-
-    while( nbytes-- ) {
-      while( ((1 << bnTbe) & SPI2STAT) == 0 );
-      SPI2BUF = ( *data );               // send next data byte
-      while( ((1 << bnRbf) & SPI2STAT) == 0 );
-      tmp = SPI2BUF;
+    digitalWrite( MAX_SS, LOW );
+    tmp = spi_swap( reg | 0x02 );
+    while( nbytes-- ) {               // send next data byte
+      tmp = spi_swap( *data );
       data++;                         // advance data pointer
     }
-    digitalWrite(MAX_SS,HIGH);
+    digitalWrite( MAX_SS, HIGH );
 #else
     digitalWrite(MAX_SS,LOW);
     SPDR = ( reg | 0x02 );
@@ -155,26 +133,9 @@ byte MAX3421E::regRd( byte reg )
     byte status;
 #if defined(__PIC32MX__)
   digitalWrite(MAX_SS,LOW);
-  while( ((1 << bnTbe) & SPI2STAT) == 0 );
-  SPI2BUF = reg;
-  while( ((1 << bnRbf) & SPI2STAT) == 0 );
-  status = SPI2BUF;
-  //SPItransfer(reg);
-  while( ((1 << bnTbe) & SPI2STAT) == 0 );
-  SPI2BUF = 0;
-  while( ((1 << bnRbf) & SPI2STAT) == 0 );
-  tmp = (byte)SPI2BUF;
-  //tmp = SPItransfer(0);
+  status = spi_swap( reg );
+  tmp = spi_swap( 0 );
   digitalWrite(MAX_SS,HIGH);
-/*
-  Serial.print("regRd(");
-  Serial.print(reg>>3,DEC);
-  Serial.print(")=0x");
-  Serial.print(status,HEX);
-  Serial.print(",0x");
-  Serial.print(tmp,HEX);
-  Serial.println("");
-*/
   return( tmp );
 #else
     digitalWrite(MAX_SS,LOW);
@@ -192,29 +153,14 @@ char * MAX3421E::bytesRd ( byte reg, byte nbytes, char  * data )
 {
     byte tmp;
 #if defined(__PIC32MX__)
-    Serial.print("regRd(");
-    Serial.print(reg,HEX);
-    Serial.print(")=");
-
     digitalWrite(MAX_SS,LOW);
-    while( ((1 << bnTbe) & SPI2STAT) == 0 );
-    SPI2BUF = reg;
-    while( ((1 << bnRbf) & SPI2STAT) == 0 );
-    tmp = SPI2BUF;
-    //SPItransfer(reg);
+    tmp = spi_swap( reg );
     while( nbytes ) {
-      while( ((1 << bnTbe) & SPI2STAT) == 0 );
-      SPI2BUF = 0;
-      while( ((1 << bnRbf) & SPI2STAT) == 0 );
-      *data = (char)SPI2BUF;
-      //*data = SPItransfer(0);
+      *data = spi_swap( 0 );
       nbytes--;
-      Serial.print(*data,HEX);
-      Serial.print(",");
       data++;
     }
     digitalWrite(MAX_SS,HIGH);
-    Serial.println("");
 #else
     digitalWrite(MAX_SS,LOW);
     SPDR = reg;      

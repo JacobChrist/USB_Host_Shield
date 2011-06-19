@@ -134,15 +134,10 @@ class MAX3421E /* : public SPI */ {
         /// Warning: if the SS pin ever becomes a LOW INPUT then SPI
         // automatically switches to Slave, so the data direction of
         // the SS pin MUST be kept as OUTPUT.
-        //SPI2CONSET = ( 1 << bnOn) | ( 1 << bnMsten ) | ( 1 << bnSmp ) | SPI_MODE1;
-        //SPI2CONSET = ( 1 << bnOn) | ( 1 << bnMsten ) | SPI_MODE1;
-        //SPI2CON = ( 1 << bnOn) | ( 1 << bnMsten ) | ( 1 << bnSmp ) | SPI_MODE1;
         SPI2CON = ( 1 << bnOn) | ( 1 << bnMsten ) | SPI_MODE1;
-        //SPI2CONSET = ( 1 << bnOn) | ( 1 << bnMsten ) | ( 1 << bnCke );
-        // todo 1: setup spi tris registers
-        // todo 1: Set SPI Mode
         // todo 3: Select proper spi bit rate
-        SPI2BRG = 0x2; // Slow the SPI way down for my lazy scope...
+        //SPI2BRG = 0x1ff; // Slow the SPI way down for my lazy scope...
+        SPI2BRG = 0x2; // Full speed SPI (pushing the limits of the MAX)
 #else
 
         /* mode 00 (CPOL=0, CPHA=0) master, fclk/2. Mode 11 (CPOL=11, CPHA=11) is also supported by MAX3421E */
