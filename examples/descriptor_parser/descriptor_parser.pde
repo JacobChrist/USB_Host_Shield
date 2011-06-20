@@ -1,5 +1,5 @@
 /* MAX3421E USB Host controller configuration descriptor parser */
-#include <Spi.h>
+//#include <Spi.h>
 #include <Max3421e.h>
 #include <Usb.h>
 #include "descriptor_parser.h"

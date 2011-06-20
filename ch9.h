@@ -100,69 +100,69 @@
 
 /* Device descriptor structure */
 typedef struct {
-    byte bLength;               // Length of this descriptor.
-    byte bDescriptorType;       // DEVICE descriptor type (USB_DESCRIPTOR_DEVICE).
-    unsigned int bcdUSB;        // USB Spec Release Number (BCD).
-    byte bDeviceClass;          // Class code (assigned by the USB-IF). 0xFF-Vendor specific.
-    byte bDeviceSubClass;       // Subclass code (assigned by the USB-IF).
-    byte bDeviceProtocol;       // Protocol code (assigned by the USB-IF). 0xFF-Vendor specific.
-    byte bMaxPacketSize0;       // Maximum packet size for endpoint 0.
-    unsigned int idVendor;      // Vendor ID (assigned by the USB-IF).
-    unsigned int idProduct;     // Product ID (assigned by the manufacturer).
-    unsigned int bcdDevice;      // Device release number (BCD).
-    byte iManufacturer;         // Index of String Descriptor describing the manufacturer.
-    byte iProduct;              // Index of String Descriptor describing the product.
-    byte iSerialNumber;         // Index of String Descriptor with the device's serial number.
-    byte bNumConfigurations;    // Number of possible configurations.
+    us8 bLength;               // Length of this descriptor.
+    us8 bDescriptorType;       // DEVICE descriptor type (USB_DESCRIPTOR_DEVICE).
+    us16 bcdUSB;        // USB Spec Release Number (BCD).
+    us8 bDeviceClass;          // Class code (assigned by the USB-IF). 0xFF-Vendor specific.
+    us8 bDeviceSubClass;       // Subclass code (assigned by the USB-IF).
+    us8 bDeviceProtocol;       // Protocol code (assigned by the USB-IF). 0xFF-Vendor specific.
+    us8 bMaxPacketSize0;       // Maximum packet size for endpoint 0.
+    us16 idVendor;      // Vendor ID (assigned by the USB-IF).
+    us16 idProduct;     // Product ID (assigned by the manufacturer).
+    us16 bcdDevice;      // Device release number (BCD).
+    us8 iManufacturer;         // Index of String Descriptor describing the manufacturer.
+    us8 iProduct;              // Index of String Descriptor describing the product.
+    us8 iSerialNumber;         // Index of String Descriptor with the device's serial number.
+    us8 bNumConfigurations;    // Number of possible configurations.
 } USB_DEVICE_DESCRIPTOR;
 
 /* Configuration descriptor structure */
 typedef struct
 {
-    byte bLength;               // Length of this descriptor.
-    byte bDescriptorType;       // CONFIGURATION descriptor type (USB_DESCRIPTOR_CONFIGURATION).
-    unsigned int wTotalLength;          // Total length of all descriptors for this configuration.
-    byte bNumInterfaces;        // Number of interfaces in this configuration.
-    byte bConfigurationValue;   // Value of this configuration (1 based).
-    byte iConfiguration;        // Index of String Descriptor describing the configuration.
-    byte bmAttributes;          // Configuration characteristics.
-    byte bMaxPower;             // Maximum power consumed by this configuration.
+    us8 bLength;               // Length of this descriptor.
+    us8 bDescriptorType;       // CONFIGURATION descriptor type (USB_DESCRIPTOR_CONFIGURATION).
+    us16 wTotalLength;          // Total length of all descriptors for this configuration.
+    us8 bNumInterfaces;        // Number of interfaces in this configuration.
+    us8 bConfigurationValue;   // Value of this configuration (1 based).
+    us8 iConfiguration;        // Index of String Descriptor describing the configuration.
+    us8 bmAttributes;          // Configuration characteristics.
+    us8 bMaxPower;             // Maximum power consumed by this configuration.
 } USB_CONFIGURATION_DESCRIPTOR;
 
 /* Interface descriptor structure */
 typedef struct
 {
-    byte bLength;               // Length of this descriptor.
-    byte bDescriptorType;       // INTERFACE descriptor type (USB_DESCRIPTOR_INTERFACE).
-    byte bInterfaceNumber;      // Number of this interface (0 based).
-    byte bAlternateSetting;     // Value of this alternate interface setting.
-    byte bNumEndpoints;         // Number of endpoints in this interface.
-    byte bInterfaceClass;       // Class code (assigned by the USB-IF).  0xFF-Vendor specific.
-    byte bInterfaceSubClass;    // Subclass code (assigned by the USB-IF).
-    byte bInterfaceProtocol;    // Protocol code (assigned by the USB-IF).  0xFF-Vendor specific.
-    byte iInterface;            // Index of String Descriptor describing the interface.
+    us8 bLength;               // Length of this descriptor.
+    us8 bDescriptorType;       // INTERFACE descriptor type (USB_DESCRIPTOR_INTERFACE).
+    us8 bInterfaceNumber;      // Number of this interface (0 based).
+    us8 bAlternateSetting;     // Value of this alternate interface setting.
+    us8 bNumEndpoints;         // Number of endpoints in this interface.
+    us8 bInterfaceClass;       // Class code (assigned by the USB-IF).  0xFF-Vendor specific.
+    us8 bInterfaceSubClass;    // Subclass code (assigned by the USB-IF).
+    us8 bInterfaceProtocol;    // Protocol code (assigned by the USB-IF).  0xFF-Vendor specific.
+    us8 iInterface;            // Index of String Descriptor describing the interface.
 } USB_INTERFACE_DESCRIPTOR;
 
 /* Endpoint descriptor structure */
 typedef struct
 {
-    byte bLength;               // Length of this descriptor.
-    byte bDescriptorType;       // ENDPOINT descriptor type (USB_DESCRIPTOR_ENDPOINT).
-    byte bEndpointAddress;      // Endpoint address. Bit 7 indicates direction (0=OUT, 1=IN).
-    byte bmAttributes;          // Endpoint transfer type.
-    unsigned int wMaxPacketSize;        // Maximum packet size.
-    byte bInterval;             // Polling interval in frames.
+    us8 bLength;               // Length of this descriptor.
+    us8 bDescriptorType;       // ENDPOINT descriptor type (USB_DESCRIPTOR_ENDPOINT).
+    us8 bEndpointAddress;      // Endpoint address. Bit 7 indicates direction (0=OUT, 1=IN).
+    us8 bmAttributes;          // Endpoint transfer type.
+    us16 wMaxPacketSize;        // Maximum packet size.
+    us8 bInterval;             // Polling interval in frames.
 } USB_ENDPOINT_DESCRIPTOR;
 
 /* HID descriptor */
 typedef struct {
-    byte bLength;                       
-        byte bDescriptorType;   
-        unsigned int bcdHID;                    
-    byte bCountryCode;          
-        byte bNumDescriptors;
-        byte bDescrType;                        
-    unsigned int wDescriptorLength;
+    us8 bLength;
+        us8 bDescriptorType;
+        us16 bcdHID;
+    us8 bCountryCode;
+        us8 bNumDescriptors;
+        us8 bDescrType;
+    us16 wDescriptorLength;
 } USB_HID_DESCRIPTOR;
 
 #endif // _ch9_h_

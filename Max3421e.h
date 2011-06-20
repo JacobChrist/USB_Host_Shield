@@ -3,6 +3,8 @@
 #ifndef _MAX3421E_H_
 #define _MAX3421E_H_
 
+#include "core.h"
+
 #if defined(__PIC32MX__)
 /*  Hardware Connections Needed to Connect chipKIT Uno32 to USB Host Shield
     Signal  Uno32   USB Shld
@@ -86,25 +88,25 @@
 #include "Max3421e_constants.h"
 
 class MAX3421E /* : public SPI */ {
-    // byte vbusState;
+    // us8 vbusState;
     public:
         MAX3421E( void );
-        byte getVbusState( void );
-//        void toggle( byte pin );
-        void regWr( byte, byte );
-        char * bytesWr( byte, byte, char * );
-        void gpioWr( byte );
-        byte regRd( byte );
-        char * bytesRd( byte, byte, char * );
-        byte gpioRd( void );
+        us8 getVbusState( void );
+//        void toggle( us8 pin );
+        void regWr( us8, us8 );
+        char * bytesWr( us8, us8, char * );
+        void gpioWr( us8 );
+        us8 regRd( us8 );
+        char * bytesRd( us8, us8, char * );
+        us8 gpioRd( void );
         boolean reset();
         boolean vbusPwr ( boolean );
         void busprobe( void );
         void powerOn();
-        byte IntHandler();
-        byte GpxHandler();
-        byte Task();
-        byte spi_swap(byte _data);
+        us8 IntHandler();
+        us8 GpxHandler();
+        us8 Task();
+        us8 spi_swap(us8 _data);
         void reg_dump(void);
 #if defined(__PIC32MX__)
 #else

@@ -3,8 +3,34 @@
 
 /* PGMSPACE */
 #include <inttypes.h>
-#include <avr/pgmspace.h>
+#if defined(__PIC32MX__)
+    // neither PROGMEM or PSTR are needed for PIC32, just define them as null
+    #define PROGMEM
+    #define PSTR(s) (s)
 
+    
+    #define pgm_read_byte(x)	        (*((char *)x))
+    #define pgm_read_byte_near(x)	(*((char *)x))
+    #define pgm_read_byte_far(x)	(*((char *)x))
+    #define pgm_read_word(x)    	(*((short *)x))
+    #define pgm_read_word_near(x)	(*((short *)x))
+    #define pgm_read_workd_far(x)	(*((short *)x))
+    
+    
+    #define	prog_void	 const void
+    #define	prog_char	 const char
+    #define	prog_uchar	 const unsigned char
+    #define	prog_int8_t	 const int8_t
+    #define	prog_uint8_t	const uint8_t
+    #define	prog_int16_t	const int16_t
+    #define	prog_uint16_t	const uint16_t
+    #define	prog_int32_t	const int32_t
+    #define	prog_uint32_t	const uint32_t
+    #define	prog_int64_t	const int64_t
+    #define	prog_uint64_t	const uint64_t
+#else
+#include <avr/pgmspace.h>
+#endif
 typedef void (*PARSE)( uint8_t bytes );
 
 /* Common Messages */

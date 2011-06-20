@@ -3,8 +3,8 @@
 
 #include "Usb.h"
 
-static byte usb_error = 0;
-static byte usb_task_state;
+static us8 usb_error = 0;
+static us8 usb_task_state;
 DEV_RECORD devtable[ USB_NUMDEVICES + 1 ];
 EP_RECORD dev0ep;           //Endpoint data structure used during enumeration for uninitialized device
 
@@ -19,7 +19,7 @@ USB::USB () {
 /* Initialize data structures */
 void USB::init()
 {
-  byte i;
+  us8 i;
     for( i = 0; i < ( USB_NUMDEVICES + 1 ); i++ ) {
         devtable[ i ].epinfo = NULL;       //clear device table
         devtable[ i ].devclass = 0;
@@ -29,15 +29,15 @@ void USB::init()
     dev0ep.sndToggle = bmSNDTOG0;   //set DATA0/1 toggles to 0
     dev0ep.rcvToggle = bmRCVTOG0;
 }
-byte USB::getUsbTaskState( void )
+us8 USB::getUsbTaskState( void )
 {
     return( usb_task_state );
 }
-void USB::setUsbTaskState( byte state )
+void USB::setUsbTaskState( us8 state )
 {
     usb_task_state = state;
 }     
-EP_RECORD* USB::getDevTableEntry( byte addr, byte ep )
+EP_RECORD* USB::getDevTableEntry( us8 addr, us8 ep )
 {
   EP_RECORD* ptr;
     ptr = devtable[ addr ].epinfo;
@@ -46,7 +46,7 @@ EP_RECORD* USB::getDevTableEntry( byte addr, byte ep )
 }
 /* set device table entry */
 /* each device is different and has different number of endpoints. This function plugs endpoint record structure, defined in application, to devtable */
-void USB::setDevTableEntry( byte addr, EP_RECORD* eprecord_ptr )
+void USB::setDevTableEntry( us8 addr, EP_RECORD* eprecord_ptr )
 {
     devtable[ addr ].epinfo = eprecord_ptr;
     //return();
@@ -56,10 +56,10 @@ void USB::setDevTableEntry( byte addr, EP_RECORD* eprecord_ptr )
 /* return codes:                */
 /* 00       =   success         */
 /* 01-0f    =   non-zero HRSLT  */
-byte USB::ctrlReq( byte addr, byte ep, byte bmReqType, byte bRequest, byte wValLo, byte wValHi, us16 wInd, us16 nbytes, char* dataptr, us16 nak_limit )
+us8 USB::ctrlReq( us8 addr, us8 ep, us8 bmReqType, us8 bRequest, us8 wValLo, us8 wValHi, us16 wInd, us16 nbytes, char* dataptr, us16 nak_limit )
 {
  boolean direction = false;     //request direction, IN or OUT
- byte rcode;   
+ us8 rcode;
  SETUP_PKT setup_pkt;
 
   regWr( rPERADDR, addr );                    //set peripheral address
@@ -95,9 +95,9 @@ byte USB::ctrlReq( byte addr, byte ep, byte bmReqType, byte bRequest, byte wValL
 }
 /* Control transfer with status stage and no data stage */
 /* Assumed peripheral address is already set */
-byte USB::ctrlStatus( byte ep, boolean direction, us16 nak_limit )
+us8 USB::ctrlStatus( us8 ep, boolean direction, us16 nak_limit )
 {
-  byte rcode;
+  us8 rcode;
     if( direction ) { //GET
         rcode = dispatchPkt( tokOUTHS, ep, nak_limit );
     }
@@ -107,9 +107,9 @@ byte USB::ctrlStatus( byte ep, boolean direction, us16 nak_limit )
     return( rcode );
 }
 /* Control transfer with data stage. Stages 2 and 3 of control transfer. Assumes preipheral address is set and setup packet has been sent */
-byte USB::ctrlData( byte addr, byte ep, us16 nbytes, char* dataptr, boolean direction, us16 nak_limit )
+us8 USB::ctrlData( us8 addr, us8 ep, us16 nbytes, char* dataptr, boolean direction, us16 nak_limit )
 {
- byte rcode;
+ us8 rcode;
   if( direction ) {                      //IN transfer
     devtable[ addr ].epinfo[ ep ].rcvToggle = bmRCVTOG1;
     rcode = inTransfer( addr, ep, nbytes, dataptr, nak_limit );
@@ -125,11 +125,11 @@ byte USB::ctrlData( byte addr, byte ep, us16 nbytes, char* dataptr, boolean dire
 /* Keep sending INs and writes data to memory area pointed by 'data'                                                           */
 /* rcode 0 if no errors. rcode 01-0f is relayed from dispatchPkt(). Rcode f0 means RCVDAVIRQ error,
             fe USB xfer timeout */
-byte USB::inTransfer( byte addr, byte ep, us16 nbytes, char* data, us16 nak_limit )
+us8 USB::inTransfer( us8 addr, us8 ep, us16 nbytes, char* data, us16 nak_limit )
 {
- byte rcode;
- byte pktsize;
- byte maxpktsize = devtable[ addr ].epinfo[ ep ].MaxPktSize; 
+ us8 rcode;
+ us8 pktsize;
+ us8 maxpktsize = devtable[ addr ].epinfo[ ep ].MaxPktSize;
  us16 xfrlen = 0;
     regWr( rHCTL, devtable[ addr ].epinfo[ ep ].rcvToggle );    //set toggle value
     while( 1 ) { // use a 'return' to exit this loop
@@ -145,7 +145,7 @@ byte USB::inTransfer( byte addr, byte ep, us16 nbytes, char* data, us16 nak_limi
         pktsize = regRd( rRCVBC );                      //number of received bytes
         data = bytesRd( rRCVFIFO, pktsize, data );
         regWr( rHIRQ, bmRCVDAVIRQ );                    // Clear the IRQ & free the buffer
-        xfrlen += pktsize;                              // add this packet's byte count to total transfer length
+        xfrlen += pktsize;                              // add this packet's us8 count to total transfer length
         /* The transfer is complete under two conditions:           */
         /* 1. The device sent a short packet (L.T. maxPacketSize)   */
         /* 2. 'nbytes' have been transferred.                       */
@@ -164,13 +164,13 @@ byte USB::inTransfer( byte addr, byte ep, us16 nbytes, char* data, us16 nak_limi
 /* Handles NAK bug per Maxim Application Note 4000 for single buffer transfer   */
 /* rcode 0 if no errors. rcode 01-0f is relayed from HRSL                       */
 /* major part of this function borrowed from code shared by Richard Ibbotson    */
-byte USB::outTransfer( byte addr, byte ep, us16 nbytes, char* data, us16 nak_limit )
+us8 USB::outTransfer( us8 addr, us8 ep, us16 nbytes, char* data, us16 nak_limit )
 {
- byte rcode, retry_count;
+ us8 rcode, retry_count;
  char* data_p = data;   //local copy of the data pointer
  us16 bytes_tosend, nak_count;
  us16 bytes_left = nbytes;
- byte maxpktsize = devtable[ addr ].epinfo[ ep ].MaxPktSize; 
+ us8 maxpktsize = devtable[ addr ].epinfo[ ep ].MaxPktSize;
  unsigned long timeout = millis() + USB_XFER_TIMEOUT;
  
   if (!maxpktsize) { //todo: move this check close to epinfo init. Make it 1< pktsize <64
@@ -183,7 +183,7 @@ byte USB::outTransfer( byte addr, byte ep, us16 nbytes, char* data, us16 nak_lim
     nak_count = 0;
     bytes_tosend = ( bytes_left >= maxpktsize ) ? maxpktsize : bytes_left;
     bytesWr( rSNDFIFO, bytes_tosend, data_p );      //filling output FIFO
-    regWr( rSNDBC, bytes_tosend );                  //set number of bytes    
+    regWr( rSNDBC, bytes_tosend );                  //set number of bytes
     regWr( rHXFR, ( tokOUT | ep ));                 //dispatch packet
     while(!(regRd( rHIRQ ) & bmHXFRDNIRQ ));        //wait for the completion IRQ
     regWr( rHIRQ, bmHXFRDNIRQ );                    //clear IRQ
@@ -225,11 +225,11 @@ byte USB::outTransfer( byte addr, byte ep, us16 nbytes, char* data, us16 nak_lim
 /* If nak_limit == 0, do not count NAKs, exit after timeout                                         */
 /* If bus timeout, re-sends up to USB_RETRY_LIMIT times                                             */
 /* return codes 0x00-0x0f are HRSLT( 0x00 being success ), 0xff means timeout                       */
-byte USB::dispatchPkt( byte token, byte ep, us16 nak_limit )
+us8 USB::dispatchPkt( us8 token, us8 ep, us16 nak_limit )
 {
  unsigned long timeout = millis() + USB_XFER_TIMEOUT;
- byte tmpdata;   
- byte rcode;
+ us8 tmpdata;
+ us8 rcode;
  us16 nak_count = 0;
  char retry_count = 0;
 
@@ -270,10 +270,10 @@ byte USB::dispatchPkt( byte token, byte ep, us16 nak_limit )
 /* USB main task. Performs enumeration/cleanup */
 void USB::Task( void )      //USB state machine
 {
-  byte i;   
-  byte rcode;
-  static byte tmpaddr; 
-  byte tmpdata;
+  us8 i;
+  us8 rcode;
+  static us8 tmpaddr;
+  us8 tmpdata;
   static unsigned long delay = 0;
   USB_DEVICE_DESCRIPTOR buf;
     tmpdata = getVbusState();

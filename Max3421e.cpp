@@ -4,7 +4,7 @@
 #include "Max3421e.h"
 #include "Max3421e_constants.h"
 
-static byte vbusState;
+static us8 vbusState;
 
 
 /* Constructor */
@@ -24,7 +24,7 @@ MAX3421E::MAX3421E()
 }
 
 /* Functions    */
-byte MAX3421E::spi_swap(byte _data) {
+us8 MAX3421E::spi_swap(us8 _data) {
     while( ((1 << bnTbe) & SPI2STAT) == 0 );
     SPI2BUF = _data;
     while( ((1 << bnRbf) & SPI2STAT) == 0 );
@@ -34,7 +34,7 @@ byte MAX3421E::spi_swap(byte _data) {
 #else
 #endif
 
-byte MAX3421E::getVbusState( void )
+us8 MAX3421E::getVbusState( void )
 { 
     return( vbusState );
 }
@@ -53,19 +53,19 @@ byte MAX3421E::getVbusState( void )
 //    pinMode( MAX_RESET, OUTPUT );
 //    digitalWrite( MAX_RESET, HIGH );  //release MAX3421E from reset
 //}
-//byte MAX3421E::getVbusState( void )
+//us8 MAX3421E::getVbusState( void )
 //{
 //    return( vbusState );
 //}
-//void MAX3421E::toggle( byte pin )
+//void MAX3421E::toggle( us8 pin )
 //{
 //    digitalWrite( pin, HIGH );
 //    digitalWrite( pin, LOW );
 //}
 /* Single host register write   */
-void MAX3421E::regWr( byte reg, byte val)
+void MAX3421E::regWr( us8 reg, us8 val)
 {
-    byte tmp;
+    us8 tmp;
 /*
     Serial.print("regWr(");
     Serial.print(reg, HEX);
@@ -91,9 +91,9 @@ void MAX3421E::regWr( byte reg, byte val)
 }
 /* multiple-byte write */
 /* returns a pointer to a memory position after last written */
-char * MAX3421E::bytesWr( byte reg, byte nbytes, char * data )
+char * MAX3421E::bytesWr( us8 reg, us8 nbytes, char * data )
 {
-    byte tmp;
+    us8 tmp;
 #if defined(__PIC32MX__)
     digitalWrite( MAX_SS, LOW );
     tmp = spi_swap( reg | 0x02 );
@@ -118,7 +118,7 @@ char * MAX3421E::bytesWr( byte reg, byte nbytes, char * data )
 /* GPIO write. GPIO byte is split between 2 registers, so two writes are needed to write one byte */
 /* GPOUT bits are in the low nibble. 0-3 in IOPINS1, 4-7 in IOPINS2 */
 /* upper 4 bits of IOPINS1, IOPINS2 are read-only, so no masking is necessary */
-void MAX3421E::gpioWr( byte val )
+void MAX3421E::gpioWr( us8 val )
 {
     regWr( rIOPINS1, val );
     val = val >>4;
@@ -127,10 +127,10 @@ void MAX3421E::gpioWr( byte val )
     return;     
 }
 /* Single host register read        */
-byte MAX3421E::regRd( byte reg )    
+us8 MAX3421E::regRd( us8 reg )
 {
-    byte tmp;
-    byte status;
+    us8 tmp;
+    us8 status;
 #if defined(__PIC32MX__)
   digitalWrite(MAX_SS,LOW);
   status = spi_swap( reg );
@@ -149,9 +149,9 @@ byte MAX3421E::regRd( byte reg )
 }
 /* multiple-bytes register read                             */
 /* returns a pointer to a memory position after last read   */
-char * MAX3421E::bytesRd ( byte reg, byte nbytes, char  * data )
+char * MAX3421E::bytesRd ( us8 reg, us8 nbytes, char  * data )
 {
-    byte tmp;
+    us8 tmp;
 #if defined(__PIC32MX__)
     digitalWrite(MAX_SS,LOW);
     tmp = spi_swap( reg );
@@ -178,9 +178,9 @@ char * MAX3421E::bytesRd ( byte reg, byte nbytes, char  * data )
 }
 /* GPIO read. See gpioWr for explanation */
 /* GPIN pins are in high nibbles of IOPINS1, IOPINS2    */
-byte MAX3421E::gpioRd( void )
+us8 MAX3421E::gpioRd( void )
 {
- byte tmpbyte = 0;
+ us8 tmpbyte = 0;
     tmpbyte = regRd( rIOPINS2 );            //pins 4-7
     tmpbyte &= 0xf0;                        //clean lower nibble
     tmpbyte |= ( regRd( rIOPINS1 ) >>4 ) ;  //shift low bits and OR with upper from previous operation. Upper nibble zeroes during shift, at least with this compiler
@@ -189,8 +189,8 @@ byte MAX3421E::gpioRd( void )
 /* reset MAX3421E using chip reset bit. SPI configuration is not affected   */
 boolean MAX3421E::reset()
 {
-  byte tmp = 0;
-  byte result = 0xff;
+  us8 tmp = 0;
+  us8 result = 0xff;
     // Note, reset does not take SPI out of full duplex (page 6 of the programing guide)
     regWr( rUSBCTL, bmCHIPRES );                        //Chip reset. This stops the oscillator
     regWr( rUSBCTL, 0x00 );                             //Remove the reset
@@ -215,7 +215,7 @@ boolean MAX3421E::reset()
 ///* OVERLOAD state low. NO OVERLOAD or VBUS OFF state high.              */
 boolean MAX3421E::vbusPwr ( boolean action )
 {
-//  byte tmp;
+//  us8 tmp;
 //    tmp = regRd( rIOPINS2 );                //copy of IOPINS2
 //    if( action ) {                          //turn on by setting GPOUT7
 //        tmp |= bmGPOUT7;
@@ -235,7 +235,7 @@ boolean MAX3421E::vbusPwr ( boolean action )
 /* probe bus to determine device presense and speed and switch host to this speed */
 void MAX3421E::busprobe( void )
 {
- byte bus_sample;
+ us8 bus_sample;
     bus_sample = regRd( rHRSL );            //Get J,K status
     bus_sample &= ( bmJSTATUS|bmKSTATUS );      //zero the rest of the byte
     switch( bus_sample ) {                          //start full-speed or low-speed host 
@@ -268,7 +268,7 @@ void MAX3421E::busprobe( void )
         }//end switch( bus_sample )
 }
 void MAX3421E::reg_dump(void){
-    byte reg;
+    us8 reg;
     for( reg = 0; reg <=31; reg++ ) {
         Serial.print("reg(");
         Serial.print(reg, DEC);
@@ -281,7 +281,7 @@ void MAX3421E::reg_dump(void){
 /* MAX3421E initialization after power-on   */
 void MAX3421E::powerOn()
 {
-    byte result;
+    us8 result;
     /* Configure full-duplex SPI, interrupt pulse   */
     Serial.println("");
     Serial.println("Starting power on sequence...");
@@ -312,10 +312,10 @@ void MAX3421E::powerOn()
     regWr( rCPUCTL, 0x01 );                                                 //enable interrupt pin
 }
 /* MAX3421 state change task and interrupt handler */
-byte MAX3421E::Task( void )
+us8 MAX3421E::Task( void )
 {
- byte rcode = 0;
- byte pinvalue;
+ us8 rcode = 0;
+ us8 pinvalue;
     //Serial.print("Vbus state: ");
     //Serial.println( vbusState, HEX );
     pinvalue = digitalRead( MAX_INT );    
@@ -329,10 +329,10 @@ byte MAX3421E::Task( void )
 //    usbSM();                                //USB state machine                            
     return( rcode );   
 }   
-byte MAX3421E::IntHandler()
+us8 MAX3421E::IntHandler()
 {
- byte HIRQ;
- byte HIRQ_sendback = 0x00;
+ us8 HIRQ;
+ us8 HIRQ_sendback = 0x00;
     HIRQ = regRd( rHIRQ );                  //determine interrupt source
     //if( HIRQ & bmFRAMEIRQ ) {               //->1ms SOF interrupt handler
     //    HIRQ_sendback |= bmFRAMEIRQ;
@@ -345,9 +345,9 @@ byte MAX3421E::IntHandler()
     regWr( rHIRQ, HIRQ_sendback );
     return( HIRQ_sendback );
 }
-byte MAX3421E::GpxHandler()
+us8 MAX3421E::GpxHandler()
 {
- byte GPINIRQ = regRd( rGPINIRQ );          //read GPIN IRQ register
+ us8 GPINIRQ = regRd( rGPINIRQ );          //read GPIN IRQ register
 //    if( GPINIRQ & bmGPINIRQ7 ) {            //vbus overload
 //        vbusPwr( OFF );                     //attempt powercycle
 //        delay( 1000 );
